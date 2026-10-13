@@ -36,9 +36,10 @@ return {
     ["align"] = 'center',
   },
   ["title"] = {
-    ["description"] = '大标题 — 红线下方、主送上方。方正小标宋、居中。',
+    ["description"] = '大标题 — 红线下方、主送上方。方正小标宋、居中。GB/T 9704-2012 §7.3.1：一般用 2 号小标宋体字，分一行或多行居中排布。',
     ["font_size"] = '\\zihao{2}',
     ["font_size_pt"] = 22,
+    ["font_family"] = 'dabiaosong',
     ["align"] = 'center',
   },
   ["mainreceiver"] = {
@@ -89,11 +90,13 @@ return {
     ["space_after_signature"] = '0pt',
   },
   ["page_number"] = {
-    ["description"] = '页码 — 页面底端居中。四号、— N — 格式。',
+    ["description"] = '页码 — GB/T 9704-2012 §7.5：一般用 4 号半角宋体阿拉伯数字，编排在公文版心下边缘之下，数字左右各放一条一字线；一字线上距版心下边缘 7mm。单页码居右空一字，双页码居左空一字。',
     ["font_size"] = '\\zihao{4}',
     ["font_size_pt"] = 14,
-    ["align"] = 'center',
+    ["align"] = 'outer',
     ["format"] = 'dash',
+    ["space_above"] = '7mm',
+    ["inset"] = '1em',
   },
 }
 

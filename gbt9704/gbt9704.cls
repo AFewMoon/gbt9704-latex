@@ -246,16 +246,24 @@
 \def\gbt@layout@redline@spaceBefore{0.1cm}
 \def\gbt@layout@redline@spaceAfter{0.3cm}
 \def\gbt@layout@title@fontSize{\zihao{2}}
+\def\gbt@layout@title@fontFamily{dabiaosong}
 \def\gbt@layout@mainreceiver@fontSize{\zihao{3}}
 \def\gbt@layout@signature@fontSize{\zihao{3}}
 \def\gbt@layout@signature@rightPad{2\ccwd}
 \def\gbt@layout@signdate@fontSize{\zihao{3}}
 \def\gbt@layout@signdate@rightPad{2\ccwd}
 \def\gbt@layout@pageNumber@fontSize{\zihao{4}}
+\def\gbt@layout@pageNumber@spaceAbove{7mm}
+\def\gbt@layout@pageNumber@inset{1em}
 
+% 注意：.def 由 json2def.py 生成，早期版本带 \makeatletter/\makeatother，
+% 直接加载会把后续类代码里的 @ 变成非字母（\@ifundefined 等立刻失效）。
+% 现在生成器已不再输出这两条；这里加载后重新断言 \makeatletter，
+% 以便兼容仍带 \makeatother 的旧版 .def（例如 dist 分支已发布的副本）。
 \InputIfFileExists{gbt9704-layout.def}{}{%
-  \ClassWarning{gbt9704}{gbt9704-layout.def not found, using built-in defaults}
+  \ClassWarning{gbt9704}{gbt9704-layout.def not found, using built-in defaults}%
 }
+\makeatletter
 % Color must be defined AFTER .def load (so .def can override it)
 \@ifundefined{gbt@layout@color@chineseRed@model}{%
   \definecolor{chinese-red}{RGB}{200,16,46}%
@@ -310,11 +318,11 @@
 }
 
 % 公文大标题（版头后、主送前，始终顶格居中）
-% 使用当前字体主题的红头字体（与 \makeheader 一致）
+% 字体由 layout.json 的 title.font_family 控制（GB/T 9704-2012 §7.3.1：2 号小标宋）
 \newcommand{\gongwentitle}[1]{%
   \begingroup
   \gbt@layout@title@fontSize
-  \gbt@redheadfont
+  \CJKfamily{\gbt@layout@title@fontFamily}%
   \setlength{\baselineskip}{28pt}
   \begin{center}#1\par\end{center}\endgroup
 }
@@ -496,9 +504,25 @@
 }
 
 % ------------------ 页码格式 ------------------
+% GB/T 9704-2012 §7.5：4 号半角宋体阿拉伯数字，数字左右各放一条一字线；
+% 一字线上距版心下边缘 7mm；单页码居右空一字，双页码居左空一字。
+\newcommand{\gbt@pagefoot@num}{\gbt@layout@pageNumber@fontSize\songti\ —\ \thepage\ —}
+\newcommand{\gbt@pagefoot}{%
+  \makebox[\textwidth]{%
+    \ifodd\value{page}%
+      \hfill\gbt@pagefoot@num\hspace*{\gbt@layout@pageNumber@inset}%
+    \else
+      \hspace*{\gbt@layout@pageNumber@inset}\gbt@pagefoot@num\hfill
+    \fi}%
+}
+% footskip 从版心下边缘量到页码基线：space_above(7mm) 再加基线到一字线上缘的偏移，
+% 使一字线上缘恰在版心下边缘之下 7mm（4 号字实测偏移 1.7pt）
+\setlength{\footskip}{\dimexpr\gbt@layout@pageNumber@spaceAbove + 1.7pt\relax}
 \makepagestyle{gongwen}
-\makeevenfoot{gongwen}{\gbt@layout@pageNumber@fontSize\songti\ —\ \thepage\ —}{}{}
-\makeoddfoot{gongwen}{}{}{\gbt@layout@pageNumber@fontSize\songti\ —\ \thepage\ —}
+% 单/双页分别用偶数页脚（左槽）与奇数页脚（右槽）；内容宏内部再按页的奇偶定位，
+% 这样单面模式（只用奇数页脚）下也能满足 §7.5 的"单页码居右、双页码居左"。
+\makeevenfoot{gongwen}{\gbt@pagefoot}{}{}
+\makeoddfoot{gongwen}{}{\gbt@pagefoot}{}
 \makeevenhead{gongwen}{}{}{}\makeoddhead{gongwen}{}{}{}
 \pagestyle{gongwen}
 

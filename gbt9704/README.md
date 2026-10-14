@@ -15,19 +15,23 @@ government organs).
 
 REQUIREMENTS
 ------------
-* TeX Live 2020 or later (LuaLaTeX recommended)
-* CTEX package (included in TeX Live)
-* memoir class (included in TeX Live)
+* TeX Live 2020 or later（推荐 XeLaTeX；LuaLaTeX 在部分机器上无法嵌入系统 CJK 字体）
+* CTEX package (included in TeX Live) — 基类是 ctexart
+* geometry + fancyhdr（included in TeX Live）——版面与页脚由这两个包实现
+  （v0.2.0 起不再依赖 memoir：memoir 与 geometry/fancyhdr/titlesec 互斥，
+   且 ctex 需要把它当"非标准文档类"打补丁）
 * Required LaTeX packages (all in TeX Live):
   - iftex, fontspec, xcolor, graphicx, array, booktabs, longtable,
     caption, subcaption, ulem, alltt, indentfirst, fcolumn
-* Required: bxcoloremoji + twemojis for colored emoji (LuaLaTeX).
-  Install via: tlmgr install bxcoloremoji twemojis
-  The emoji are rendered as colored PDF vector graphics — no emoji
-  system fonts required. When using XeLaTeX, falls back to system
-  emoji fonts (Segoe UI Emoji or NotoEmoji).
+* Emoji：
+  - XeLaTeX（默认引擎）：用 TeX Live `noto-emoji` 包自带的 `NotoEmoji-Regular.ttf`，
+    输出黑白 emoji，不依赖系统 emoji 字体（不做存在性探测，避免缺失字体触发 METAFONT）。
+  - LuaLaTeX（可选，彩色 emoji）：`tlmgr install bxcoloremoji twemojis`，
+    emoji 以 PDF 彩色矢量图形输出。
 * Fonts:
-  - FangSong, SimHei, KaiTi, SimSun (standard Windows/Chinese fonts)
+  - 默认分支：FangSong, SimHei, KaiTi, SimSun（Windows/WPS 自带）
+  - `fandol` 选项：只用 TeX Live 自带的 Fandol + Latin Modern，
+    供没有中文系统字体的机器（CI、容器）使用
   - FZDaBiaoSong-B06 (FangZheng DaBiaoSong) for red headers.
     If not installed, the class will automatically fall back
     to SimHei with fake bold, with a warning message.

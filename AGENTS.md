@@ -29,6 +29,20 @@ python3 gbt9704/tools/json2def.py gbt9704/gbt9704-layout.json --lua > gbt9704/gb
 \documentclass[fandol,redline]{gbt9704}
 ```
 
+Markdown 草稿转公文（`tools/md2gongwen.py`，仅标准库、不依赖 pandoc）。类文件不必拷贝，用 `TEXINPUTS` 让 `\documentclass{gbt9704}` 解析到本仓库的 `gbt9704/`（Windows 分号分隔，末尾分号保留默认搜索路径），中间产物收进 `_build`：
+
+```powershell
+# 1) 转换（可选参数缺省时：标题取文件名/首行一级标题，落款取文末两个整段加粗）
+python3 gbt9704/tools/md2gongwen.py 草稿.md -o 输出.tex `
+  --org "发文机关" --number "x发〔2026〕1 号"
+
+# 2) 编译
+$env:TEXINPUTS = 'C:\...\GBT9704-LaTeX\gbt9704;'
+latexmk -lualatex -auxdir=_build -interaction=nonstopmode 输出.tex
+```
+
+转换器只支持公文草稿实际用到的语法子集（`##`/`###` 标题、段落、`**加粗**`、行内链接降级为纯文字）；遇到列表、表格、图片、引用、代码块会带行号报错中止，不会静默丢内容。
+
 ## 架构
 
 ### 1. 布局参数管线（单一规范源 → 两件生成物 → 宏覆盖）
@@ -68,7 +82,9 @@ Emoji 也按引擎分叉：LuaLaTeX 走 `bxcoloremoji` → `twemojis`，用 `\di
 
 - **不要手改 `.def` / `.lua`**，它们每次都会整份重新生成。
 - **`.def` 里绝不能出现 `\makeatletter/\makeatother`**：文件在 `.cls` 的 `\makeatletter` 组内加载，`\makeatother` 会把后续类代码中的 `@` 变成非字母，`\@ifundefined` 等立即失效。生成器已修正；`.cls` 在加载后重新断言 `\makeatletter` 以兼容旧副本。
-- **不要用 `\IfFontExistsTF` 探测 TeX 树内字体**（Fandol / NotoEmoji / Latin Modern）：检测不到，且缺失时会退化成 METAFONT 查找并以 `I can't find file` 中断编译。TeX 树字体必须写成"文件名 + 扩展名"（如 `FandolSong-Regular.otf`）。`\IfFontExistsTF` 只用于系统字体（FangSong、SimHei、方正系），失败时 `\ClassWarning` 后继续编译。
+- **不要用 `\IfFontExistsTF` 探测 TeX 树内字体**（Fandol / NotoEmoji / Latin Modern）：检测不到，且缺失时会退化成 METAFONT 查找并以 `I can't find file` 中断编译。TeX 树字体必须写成"文件名 + 扩展名"（如 `FandolSong-Regular.otf`）。`\IfFontExistsTF` 只用于系统字体（FangSong、SimHei、方正系），失败时 `\ClassWarning` 后继续编译。等宽字体（`\gbt@setupmonofonts`）就是这条规则的落地：Sarasa Mono SC → SimHei、DejaVu Sans Mono → Consolas → lmmono10-regular.otf，改等宽字体时保持"声明即加载、缺失即降级"的写法，不要写回硬声明。
+- **`zhlineskip` 不能传 `quiet`**：v1.0e（及任何未收录该选项的版本）会对未知选项直接 `PackageError`，宁可少传选项（bodytextleadingratio / footnoteleadingratio / restoremathleading 已是全版本通用）。
+- **`fzfonts` 分支要求方正字体系完整安装**：缺 FZFangSong-Z02 / FZShuSong-Z01 等时会在 `\setCJKmainfont` 处致命报错（与等宽字体不同，主字体没有回退链）。本机若无方正字体，请用默认分支或 `fandol`。
 - **版本号以 `\ProvidesClass` 为准（v0.2.0, 2026-10-14）**，文件头注释仍写 v0.1.14，属未同步。改功能时同步更新 `gbt9704/README.md` 的 CHANGELOG 与 `gbt9704-doc.tex`。
 - **文档漂移**：`README.md`、`gbt9704/README.md`、`gbt9704-doc.tex` 仍描述"基于 memoir"，而 `gbt9704.cls` 早已改为 `ctexart` + geometry + fancyhdr（memoir 与三者互斥，且 ctex 需把它当非标准文档类打补丁）。读文档时以此文件的描述为准，改动时顺手修正。
 - `issue`、`roadmap` 是本地笔记文件，已被 `.gitignore` 忽略；`gbt9704-doc.pdf` 是入库的编译产物。

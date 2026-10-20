@@ -125,6 +125,20 @@ or email: songwupei@163.com
 
 CHANGELOG
 ---------
+v0.2.0 (unreleased) - Monospace font fallback and Markdown converter.
+- Monospace fonts now degrade gracefully: Sarasa Mono SC →
+  SimHei (CJK) and DejaVu Sans Mono → Consolas → lmmono10
+  (TeX Live). Previously a missing mono font aborted the compile
+  at \documentclass time, even though the class never quotes
+  monospaced text.
+- zhlineskip is loaded without the `quiet` option: v1.0e (and any
+  release that lacks it) treats unknown options as fatal
+  PackageError.
+- \makeheader's third argument (签发人) is no longer typeset when
+  empty, matching its documentation.
+- New tool: tools/md2gongwen.py converts a Markdown draft into
+  gbt9704-class LaTeX (pure standard library, no pandoc needed).
+
 v0.1.4 (2026-07-29) - Section numbering and ctex heading integration.
 - Section numbering: Chinese numerals (一、（一）、1.) per GB/T 9704-2012.
 - Switched heading styles from memoir \setsecheadstyle to ctex \ctexset for

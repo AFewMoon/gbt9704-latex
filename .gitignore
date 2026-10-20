@@ -1,9 +1,13 @@
 .omc/
 .codebuddy/
+__pycache__/
+*.pyc
 *.aux
 *.log
 *.out
 *.toc
+*.fdb_latexmk
+*.fls
 issue
 roadmap
 gbt9704.zip

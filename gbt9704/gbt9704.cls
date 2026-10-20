@@ -53,16 +53,45 @@
 %   footnoteleadingratio 与正文保持一致
 %   数学公式恢复西文行距（restoremathleading）
 \if@gbt@zhlineskip
+  % 注意：不能传 `quiet`——zhlineskip v1.0e（2019/05/15，以及任何未收录
+  % 该选项的版本）会把未知选项当 PackageError 直接中断编译。只传
+  % bodytextleadingratio / footnoteleadingratio / restoremathleading
+  % 三个各版本都认识的选项。
   \RequirePackage[
     bodytextleadingratio = 1.75,
     footnoteleadingratio = 1.75,
-    restoremathleading,
-    quiet
+    restoremathleading
   ]{zhlineskip}
 \fi
 
 % ------------------ 字体设置 ------------------
 \RequirePackage{fontspec}
+
+% --- 等宽字体（带回退） ---
+% Sarasa Mono SC 与 DejaVu Sans Mono 并非常规标配字体：fontspec 在声明时
+% 即加载字体，缺失会让 \documentclass 直接中断编译。此处按
+% Sarasa Mono SC → SimHei、DejaVu Sans Mono → Consolas → lmmono10（TeX Live
+% 自带）逐级回退，只发 ClassWarning 不中断，与红头字体的回退语义一致。
+% 定义放在各字体分支之前，供 fzfonts / 默认两个分支与 \AtBeginDocument 共同调用。
+% 注意：fandol 分支用的是 TeX 树内字体（文件名+扩展名），不走本宏。
+\newcommand{\gbt@setupmonofonts}{%
+  \IfFontExistsTF{Sarasa Mono SC}{%
+    \setCJKmonofont{Sarasa Mono SC}%
+  }{%
+    \setCJKmonofont{SimHei}[Scale=1]%
+    \ClassWarning{gbt9704}{Sarasa Mono SC not found, using SimHei for CJK monospace}%
+  }%
+  \IfFontExistsTF{DejaVu Sans Mono}{%
+    \setmonofont{DejaVu Sans Mono}%
+  }{%
+    \IfFontExistsTF{Consolas}{%
+      \setmonofont{Consolas}%
+    }{%
+      \setmonofont{lmmono10-regular.otf}%
+    }%
+    \ClassWarning{gbt9704}{DejaVu Sans Mono not found, using fallback Western monospace font}%
+  }%
+}
 
 \if@gbt@fzfonts
   % ================================================================
@@ -99,7 +128,7 @@
   % --- 西文：Times New Roman 系 ---
   \setmainfont{Times New Roman}
   \setsansfont{Arial}
-  \setmonofont{Consolas}
+  \gbt@setupmonofonts
 
   % --- 数学字体 ---
   % LuaLaTeX 下 newtxmath 可能冲突，公文场景极少数学公式
@@ -152,8 +181,7 @@
     \setCJKfamilyfont{zhsong}{SimSun}
 
     % --- 等宽字体 ---
-    \setCJKmonofont{Sarasa Mono SC}
-    \setmonofont{DejaVu Sans Mono}
+    \gbt@setupmonofonts
   \fi
 
   % --- 字体切换命令 ---
@@ -371,7 +399,7 @@
   \if@gbt@fandol
     \setmonofont{lmmono10-regular.otf}%
   \else
-    \setmonofont{DejaVu Sans Mono}%
+    \gbt@setupmonofonts
   \fi
 
   % 标题行沿用正文行距：否则标题按其自身字号（三号）的行距 19.2pt 计算行节距，
@@ -439,8 +467,10 @@
     \vspace{\gbt@layout@headerNumber@spaceAfterHeaderOrg}
     \parbox{\textwidth}{\centering
       \gbt@layout@headerNumber@fontSize\fangsong #2
-      \\[0.2cm]
-      \gbt@layout@headerNumber@fontSize\fangsong #3}%
+      \ifx\relax#3\relax\else
+        \\[0.2cm]
+        \gbt@layout@headerNumber@fontSize\fangsong #3
+      \fi}%
     \vspace{\gbt@layout@redline@spaceBefore}
     \if@gbt@redline
       \textcolor{chinese-red}{%
